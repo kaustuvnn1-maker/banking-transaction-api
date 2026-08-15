@@ -9,7 +9,11 @@ __pycache__/
 *.pyo
 *.pyd
 
-
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar
 
 # IDE/editor files
 .vscode/

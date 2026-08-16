@@ -1,12 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-
+from database.accounts import Account  # noqa: F401
+from database.connections import init_db
 from exceptions.business_exception import BusinessException
 from routes.get_accounts_route import router as accounts_router
 from routes.transfer_route import router as transfer_router
 
 app = FastAPI()
 
+init_db()
 
 @app.exception_handler(BusinessException)
 async def business_exception_handler(request: Request, exc: BusinessException):

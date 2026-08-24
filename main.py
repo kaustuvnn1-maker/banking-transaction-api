@@ -5,6 +5,7 @@ from database.connections import init_db
 from exceptions.business_exception import BusinessException
 from routes.get_accounts_route import router as accounts_router
 from routes.transfer_route import router as transfer_router
+from routes.create_account_route import create_account_router  # noqa: F401
 
 app = FastAPI()
 
@@ -22,7 +23,7 @@ async def business_exception_handler(request: Request, exc: BusinessException):
 
 app.include_router(transfer_router)
 app.include_router(accounts_router)
-
+app.include_router(create_account_router)
 
 @app.get("/health")
 def get_health():

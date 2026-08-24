@@ -1,5 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from database.connections import get_db
 from schemas.transfer_schema import TransferDetails
 from service.transfer_service import transfer_money
 
@@ -7,5 +9,5 @@ router = APIRouter()
 
 
 @router.post("/transfers")
-def money_transfer(transfer_details: TransferDetails):
-    return transfer_money(transfer_details)
+def money_transfer(transfer_details: TransferDetails,db: Session = Depends(get_db)):
+    return transfer_money(transfer_details,db)

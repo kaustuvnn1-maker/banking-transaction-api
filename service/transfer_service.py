@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from database.accounts import Account
+from database.transaction_log import Transaction
 from exceptions.business_exception import BusinessException
 from schemas.transfer_schema import TransferDetails
 
@@ -23,6 +24,12 @@ def transfer_money(transfer_details: TransferDetails,db: Session):
         # Introduce error here to test rollback
         #raise RuntimeError("Intentional error for rollback testing")
         to_account.balance += transfer_details.amount
+        #raise RuntimeError("Intentional error for rollback testing")
+        db.add(Transaction(
+            account_id_from=transfer_details.from_account,
+            account_id_to=transfer_details.to_account,
+            amount=transfer_details.amount,
+        ))
         db.commit()
         return {"message": "Transfer successful", "from_account": transfer_details.from_account, "to_account": transfer_details.to_account}
     except Exception:

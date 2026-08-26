@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from schemas.create_account_schema import CreateAccount
 from service.create_account_service import new_account_creation
 from database.connections import get_db
+from schemas.create_account_schema import AccountResponse
 
 create_account_router = APIRouter()
 
-@create_account_router.post("/accounts")
+@create_account_router.post("/accounts", response_model=AccountResponse)
 def create_account(account: CreateAccount,db: Session = Depends(get_db)):
     return new_account_creation(account,db)

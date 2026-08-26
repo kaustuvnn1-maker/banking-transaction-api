@@ -9,7 +9,13 @@ def new_account_creation(account: CreateAccount, db: Session):
         db.add(account_record)
         db.commit()
         db.refresh(account_record)
-        return {"message": "Account created successfully", "account": account_record}
+        return account_record
+        # return {
+        #         "message": "Account created successfully",
+        #         "account_id": account_record.id,
+        #         "account_name": account_record.account_holder_name,
+        #         "balance": account_record.balance,
+        #     }
     except SQLAlchemyError:
         db.rollback()
         raise

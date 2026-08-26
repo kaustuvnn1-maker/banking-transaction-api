@@ -6,19 +6,21 @@ def get_account_details(account_id: int, db: Session):
     account = db.query(Account).filter(Account.id == account_id).first()
     if not account:
         raise BusinessException("Account not found","ACCOUNT_NOT_EXISTS", status_code=404)
-    return {
-        "account_id": account_id,
-        "account_name": account.account_holder_name,
-        "balance": float(account.balance),
-    }
+    return account
+    # return {
+    #     "account_id": account_id,
+    #     "account_name": account.account_holder_name,
+    #     "balance": account.balance,
+    # }
 
 def get_all_accounts_details(db: Session): 
     accounts = db.query(Account).all()
-    all_accounts = []
-    for account in accounts:
-        all_accounts.append({
-            "account_id": account.id,
-            "account_name": account.account_holder_name,
-            "balance": float(account.balance),
-        })
-    return all_accounts
+    return accounts
+    # all_accounts = []
+    # for account in accounts:
+    #     all_accounts.append({
+    #         "account_id": account.id,
+    #         "account_name": account.account_holder_name,
+    #         "balance": account.balance,
+    #     })
+    # return all_accounts

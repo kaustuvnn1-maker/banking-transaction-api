@@ -8,10 +8,10 @@ from schemas.create_account_schema import AccountResponse
 router = APIRouter()
 
 
-@router.get("/accounts/{account_id}", response_model=AccountResponse)
+@router.get("/accounts/{account_id}", response_model=AccountResponse, response_model_exclude_none=True)
 def get_account(account_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
     return get_account_details(account_id, db)
 
-@router.get("/accounts", response_model=list[AccountResponse])
+@router.get("/accounts", response_model=list[AccountResponse], response_model_exclude_none=True)
 def get_all_accounts(db: Session = Depends(get_db)):
     return get_all_accounts_details(db)

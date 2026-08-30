@@ -9,3 +9,4 @@ class TransactionResponse(BaseModel):
     account_id_to: int
     amount: Decimal
     transaction_date: datetime
+    transaction_status: str

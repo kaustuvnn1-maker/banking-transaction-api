@@ -7,6 +7,6 @@ from schemas.create_account_schema import AccountResponse
 
 create_account_router = APIRouter()
 
-@create_account_router.post("/accounts", response_model=AccountResponse)
+@create_account_router.post("/accounts", response_model=AccountResponse, response_model_exclude_none=True)
 def create_account(account: CreateAccount,db: Session = Depends(get_db)):
     return new_account_creation(account,db)

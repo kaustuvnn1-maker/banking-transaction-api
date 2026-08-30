@@ -15,7 +15,7 @@ class CreateAccount(BaseModel):
         return value 
 
 class AccountResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, exclude_none=True)
     message: str | None = None
     account_id: int = Field(validation_alias="id")
     account_name: str = Field(validation_alias="account_holder_name")

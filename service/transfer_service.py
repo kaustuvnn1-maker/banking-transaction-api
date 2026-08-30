@@ -29,6 +29,7 @@ def transfer_money(transfer_details: TransferDetails,db: Session):
             account_id_from=transfer_details.from_account,
             account_id_to=transfer_details.to_account,
             amount=transfer_details.amount,
+            transaction_status="SUCCESS"
         ))
         db.commit()
         return {"message": "Transfer successful", "from_account": transfer_details.from_account, "to_account": transfer_details.to_account}

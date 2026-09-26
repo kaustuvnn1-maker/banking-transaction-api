@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
 from database.connections import get_db
@@ -9,5 +9,9 @@ router = APIRouter()
 
 
 @router.post("/transfers", response_model=TransferResponse)
-def money_transfer(transfer_details: TransferDetails,db: Session = Depends(get_db)):
-    return transfer_money(transfer_details,db)
+def money_transfer(
+    transfer_details: TransferDetails,
+    idem_key: str = Header(..., alias="Idempotency-Key", min_length=1),
+    db: Session = Depends(get_db),
+):
+    return transfer_money(transfer_details, db, idem_key=idem_key)

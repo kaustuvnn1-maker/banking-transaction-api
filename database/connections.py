@@ -1,28 +1,19 @@
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, declarative_base,Session
-from fastapi import Depends
-from typing import Annotated
-# SQLite URL (file-based)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./bank.db"
+import os
 
-# Engine
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-@event.listens_for(engine, "connect")
-def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys = ON")
-    cursor.close()
+load_dotenv()
 
-# Session factory
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://kaustuvdash@localhost:5432/bankapidb",
+)
+
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class for models
 Base = declarative_base()
-
-def init_db():
-    """Initialize database (create tables)."""
-    Base.metadata.create_all(bind=engine)
 
 def get_db():
     """Yield a SQLAlchemy session for FastAPI dependencies."""
@@ -31,4 +22,3 @@ def get_db():
         yield db
     finally:
         db.close()
-        

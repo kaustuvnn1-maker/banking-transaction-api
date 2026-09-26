@@ -11,5 +11,6 @@ class Transaction(Base):
 	amount = Column(Numeric(12, 2), nullable=False)
 	transaction_date = Column(DateTime, nullable=False, server_default=func.now())
 	transaction_status = Column(String(20), nullable=False, server_default="FAILURE")
+	idem_key = Column(String, nullable=True, unique=True)
 
 

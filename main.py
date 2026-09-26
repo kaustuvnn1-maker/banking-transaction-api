@@ -7,6 +7,8 @@ from routes.get_accounts_route import router as accounts_router
 from routes.transfer_route import router as transfer_router
 from routes.create_account_route import create_account_router  # noqa: F401
 from routes.get_transactions_route import get_transaction_router  # noqa: F401
+from routes.new_user_creation_route import create_user_router
+from routes.login_user_route import login_router
 
 app = FastAPI()
 
@@ -24,6 +26,8 @@ app.include_router(transfer_router)
 app.include_router(accounts_router)
 app.include_router(create_account_router)
 app.include_router(get_transaction_router)
+app.include_router(create_user_router)
+app.include_router(login_router)
 
 @app.get("/health")
 def get_health():

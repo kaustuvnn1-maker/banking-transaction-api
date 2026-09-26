@@ -9,6 +9,7 @@ from alembic import context
 from database.connections import Base
 from database.accounts import Account  # noqa: F401
 from database.transaction_log import Transaction  # noqa: F401
+from database.user_login_details import UserLogin  # noqa: F401
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 config = context.config

@@ -7,9 +7,9 @@ from exceptions.business_exception import BusinessException
 from schemas.transfer_schema import TransferDetails
 
 
-def transfer_money(transfer_details: TransferDetails, db: Session, idem_key: str):
+def transfer_money(transfer_details: TransferDetails, db: Session, idem_key: str, current_user):
     if transfer_details.from_account == transfer_details.to_account:
-        raise BusinessException("Cannot transfer to the same account.","SAME_ACCOUNT_TRANSFER")
+        raise BusinessException("Cannot transfer to the same account.", "SAME_ACCOUNT_TRANSFER")
 
     existing_transaction = db.query(Transaction).filter(
         Transaction.idem_key == idem_key,
@@ -38,29 +38,37 @@ def transfer_money(transfer_details: TransferDetails, db: Session, idem_key: str
             Account.id == transfer_details.to_account
         ).with_for_update().first()
         if not from_account:
-            raise BusinessException("From Account not found.", "ACCOUNT_FROM_NOT_FOUND",status_code=404)
+            raise BusinessException("From Account not found.", "ACCOUNT_FROM_NOT_FOUND", status_code=404)
         if not to_account:
-            raise BusinessException("To Account not found.", "ACCOUNT_TO_NOT_FOUND",status_code=404)
+            raise BusinessException("To Account not found.", "ACCOUNT_TO_NOT_FOUND", status_code=404)
+
+        if from_account.user_id != current_user.userID:
+            raise BusinessException(
+                "You do not own the source account.",
+                "ACCOUNT_NOT_OWNED_BY_USER",
+                status_code=403,
+            )
 
         if from_account.balance < transfer_details.amount:
             raise BusinessException("Insufficient balance.", "INSUFFICIENT_BALANCE")
 
-    
         from_account.balance -= transfer_details.amount
-        # Introduce error here to test rollback
-        #raise RuntimeError("Intentional error for rollback testing")
         to_account.balance += transfer_details.amount
-        #raise RuntimeError("Intentional error for rollback testing")
-        #time.sleep(8)
-        db.add(Transaction(
-            account_id_from=transfer_details.from_account,
-            account_id_to=transfer_details.to_account,
-            amount=transfer_details.amount,
-            transaction_status="SUCCESS",
-            idem_key=idem_key,
-        ))
+        db.add(
+            Transaction(
+                account_id_from=transfer_details.from_account,
+                account_id_to=transfer_details.to_account,
+                amount=transfer_details.amount,
+                transaction_status="SUCCESS",
+                idem_key=idem_key,
+            )
+        )
         db.commit()
-        return {"message": "Transfer successful", "from_account": transfer_details.from_account, "to_account": transfer_details.to_account}
+        return {
+            "message": "Transfer successful",
+            "from_account": transfer_details.from_account,
+            "to_account": transfer_details.to_account,
+        }
     except IntegrityError:
         db.rollback()
         existing_transaction = db.query(Transaction).filter(

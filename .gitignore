@@ -24,3 +24,5 @@ __pycache__/
 # database files
 *.db
 
+# Logs
+*.log

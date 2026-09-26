@@ -11,8 +11,8 @@ get_transaction_router = APIRouter()
 
 @get_transaction_router.get("/transactions", response_model=list[TransactionResponse])
 def get_transactions(db: Session = Depends(get_db),current_user: UserLogin = Depends(get_authenticated_user)):
-    return get_all_transactions_log(db)
+    return get_all_transactions_log(current_user,db)
 
 @get_transaction_router.get("/accounts/{account_id}/transactions", response_model=list[TransactionResponse])
 def get_history_by_id(db:Session = Depends(get_db), account_id:  int = Path(..., gt=0), current_user: UserLogin = Depends(get_authenticated_user)):
-    return get_all_transactions_by_id(db, account_id)
+    return get_all_transactions_by_id(db, account_id) 

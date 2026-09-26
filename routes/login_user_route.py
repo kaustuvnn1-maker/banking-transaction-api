@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from schemas.create_new_user_schema import CreateNewUser as loginUser
+from schemas.login_user_schema import loginUser
 from service.login_user_service import login_user_verification
 from database.connections import get_db
 

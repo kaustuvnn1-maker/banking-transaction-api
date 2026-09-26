@@ -1,7 +1,6 @@
 from decimal import Decimal
 from pydantic import BaseModel, Field
 
-class CreateNewUser(BaseModel):
+class loginUser(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
-    role: str = Field(..., min_length=3, max_length=20)

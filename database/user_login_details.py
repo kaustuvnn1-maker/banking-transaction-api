@@ -4,8 +4,9 @@ from database.connections import Base
 
 
 class UserLogin(Base):
-	__tablename__ = "userLogin"
+    __tablename__ = "userLogin"
 
-	userID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-	username = Column(String, nullable=False, unique=True)
-	password = Column(String, nullable=False)
+    userID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
+    role = Column(String, nullable=False, default="customer", server_default="customer")

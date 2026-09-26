@@ -23,11 +23,12 @@ def new_user_creation(user: CreateNewUser, db: Session):
         user_record = UserLogin(
             username=user.username,
             password=password_hasher.hash(user.password),
+            role=user.role
         )
         db.add(user_record)
         db.commit()
         db.refresh(user_record)
-        return {"userID": user_record.userID, "username": user_record.username}
+        return {"userID": user_record.userID, "username": user_record.username, "role": user_record.role}
     except SQLAlchemyError:
         db.rollback()
         raise

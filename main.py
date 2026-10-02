@@ -11,6 +11,7 @@ from routes.get_transactions_route import get_transaction_router  # noqa: F401
 from routes.login_user_route import login_router
 from routes.new_user_creation_route import create_user_router
 from routes.transfer_route import router as transfer_router
+from routes.create_admin_route import create_admin_router  # noqa: F401
 
 app = FastAPI()
 app.add_middleware(RequestLoggingMiddleware)
@@ -31,6 +32,7 @@ app.include_router(create_account_router)
 app.include_router(get_transaction_router)
 app.include_router(create_user_router)
 app.include_router(login_router)
+app.include_router(create_admin_router)  # Include the create_admin_router for admin user creation
 
 @app.get("/health")
 def get_health():

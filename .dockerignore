@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+
+.git
+.gitignore
+
+.env
+.env.docker
+
+logs
+*.log
+
+.DS_Store
+
+*.zip

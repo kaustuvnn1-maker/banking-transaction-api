@@ -26,3 +26,13 @@ __pycache__/
 
 # Logs
 *.log
+
+#docker env files
+.env
+.env.docker
+.env.example
+
+#certificates
+certs/
+*.key
+*.crt

@@ -31,12 +31,16 @@ def transfer_money(transfer_details: TransferDetails, db: Session, idem_key: str
             "to_account": existing_transaction.account_id_to,
         }
     try:
-        from_account = db.query(Account).filter(
-            Account.id == transfer_details.from_account
-        ).with_for_update().first()
-        to_account = db.query(Account).filter(
-            Account.id == transfer_details.to_account
-        ).with_for_update().first()
+        locked_accounts = {}
+        for account_id in sorted((transfer_details.from_account, transfer_details.to_account)):
+            account = db.query(Account).filter(
+                Account.id == account_id
+            ).with_for_update().first()
+            if account:
+                locked_accounts[account_id] = account
+
+        from_account = locked_accounts.get(transfer_details.from_account)
+        to_account = locked_accounts.get(transfer_details.to_account)
         if not from_account:
             raise BusinessException("From Account not found.", "ACCOUNT_FROM_NOT_FOUND", status_code=404)
         if not to_account:

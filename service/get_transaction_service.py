@@ -10,12 +10,11 @@ def get_all_transactions_log(current_user: UserLogin, db: Session):
     return transaction_logs
 
 def get_all_transactions_by_id(db: Session, account_id: int,current_user: UserLogin):
-    account = db.query(Account).filter(
-        Account.id == account_id,
-        Account.user_id == current_user.userID,
-    ).first()
+    account = db.query(Account).filter(Account.id == account_id).first()
     if not account:
-        raise BusinessException("Account ID not found for this user.", "ACCOUNT_NOT_FOUND", status_code=404)
+        raise BusinessException("Account not found.", "ACCOUNT_NOT_FOUND", status_code=404)
+    if account.user_id != current_user.userID:
+        raise BusinessException("You do not own this account.", "ACCOUNT_NOT_OWNED_BY_USER", status_code=403)
     transaction_logs = db.query(Transaction).filter(
         (Transaction.account_id_from == account_id) | (Transaction.account_id_to == account_id)
     ).all()

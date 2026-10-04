@@ -30,7 +30,6 @@ __pycache__/
 #docker env files
 .env
 .env.docker
-.env.example
 .env.test
 
 #certificates

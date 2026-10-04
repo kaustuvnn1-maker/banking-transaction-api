@@ -1,0 +1,238 @@
+name: Banking API CI
+
+# ---------------------------------------------------------
+# WHEN should this workflow run?
+# ---------------------------------------------------------
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+
+# GitHub Actions only needs permission to read our code.
+permissions:
+  contents: read
+
+
+# ---------------------------------------------------------
+# JOBS
+# ---------------------------------------------------------
+jobs:
+
+  test:
+    name: Build and Test Banking API
+
+    # GitHub gives us a temporary Ubuntu computer.
+    runs-on: ubuntu-latest
+
+    # Prevent a broken job from running forever.
+    timeout-minutes: 20
+
+
+    steps:
+
+      # ---------------------------------------------------
+      # STEP 1
+      # Download our repository into the GitHub runner
+      # ---------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # ---------------------------------------------------
+      # STEP 2
+      # Install Python on the GitHub runner
+      #
+      # pytest itself will run OUTSIDE Docker and send
+      # requests to our Dockerized application.
+      # ---------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+
+      # ---------------------------------------------------
+      # STEP 3
+      # Install pytest + requests + other test packages
+      # ---------------------------------------------------
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+
+      # ---------------------------------------------------
+      # STEP 4
+      # Create a completely temporary CI environment
+      #
+      # These credentials exist only inside this temporary
+      # GitHub Actions machine.
+      # ---------------------------------------------------
+      - name: Create CI test environment
+        run: |
+          cat > .env.test <<EOF
+          POSTGRES_DB=bankapidb_test
+          POSTGRES_USER=banktestuser
+          POSTGRES_PASSWORD=banktestpassword
+          JWT_SECRET_KEY=ci-only-jwt-secret-not-for-production
+          DATABASE_URL=postgresql+psycopg2://banktestuser:banktestpassword@db:5432/bankapidb_test
+          API_BASE_URL=https://localhost:8443/api
+          VERIFY_TLS=false
+          TEST_REQUEST_DELAY=0.25
+          EOF
+
+
+      # ---------------------------------------------------
+      # STEP 5
+      # Generate a temporary TLS certificate
+      #
+      # We correctly do NOT commit our local certificate
+      # and private key to GitHub.
+      # Therefore GitHub must generate its own certificate.
+      # ---------------------------------------------------
+      - name: Generate test TLS certificate
+        run: |
+          mkdir -p certs
+
+          openssl req \
+            -x509 \
+            -nodes \
+            -newkey rsa:2048 \
+            -keyout certs/server.key \
+            -out certs/server.crt \
+            -days 1 \
+            -subj "/CN=localhost" \
+            -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+
+
+      # ---------------------------------------------------
+      # STEP 6
+      # Ask Docker Compose:
+      #
+      # "Can you successfully understand my compose file?"
+      #
+      # This catches YAML/environment mistakes before
+      # trying to start containers.
+      # ---------------------------------------------------
+      - name: Validate Docker Compose
+        run: |
+          docker compose \
+            --env-file .env.test \
+            -p bankapi-ci \
+            config
+
+
+      # ---------------------------------------------------
+      # STEP 7
+      # Build and start our REAL three-container system:
+      #
+      # PostgreSQL
+      # FastAPI
+      # NGINX
+      #
+      # Your API container should also run:
+      # alembic upgrade head
+      # before starting Uvicorn.
+      # ---------------------------------------------------
+      - name: Build and start application
+        run: |
+          docker compose \
+            --env-file .env.test \
+            -p bankapi-ci \
+            up --build -d
+
+
+      # ---------------------------------------------------
+      # STEP 8
+      # Print container state
+      #
+      # Useful when reading CI logs.
+      # ---------------------------------------------------
+      - name: Show containers
+        run: |
+          docker compose \
+            --env-file .env.test \
+            -p bankapi-ci \
+            ps
+
+
+      # ---------------------------------------------------
+      # STEP 9
+      # Containers may take a few seconds to become ready.
+      #
+      # So we don't immediately run pytest.
+      # We repeatedly call the health API first.
+      # ---------------------------------------------------
+      - name: Wait for Banking API
+        run: |
+          for i in {1..30}; do
+
+            if curl \
+              -k \
+              --fail \
+              https://localhost:8443/api/health
+            then
+              echo ""
+              echo "Banking API is healthy"
+              exit 0
+            fi
+
+            echo "Waiting for Banking API..."
+            sleep 2
+
+          done
+
+          echo "Banking API failed to become healthy"
+          exit 1
+
+
+      # ---------------------------------------------------
+      # STEP 10
+      # Run our automated regression tests.
+      #
+      # pytest ->
+      # HTTPS ->
+      # NGINX ->
+      # FastAPI ->
+      # PostgreSQL
+      # ---------------------------------------------------
+      - name: Run pytest
+        run: |
+          pytest -v
+
+
+      # ---------------------------------------------------
+      # STEP 11
+      # If ANY previous step fails, print Docker logs.
+      #
+      # This is extremely useful because otherwise GitHub
+      # might only tell us "health check failed".
+      # ---------------------------------------------------
+      - name: Show Docker logs on failure
+        if: failure()
+        run: |
+          docker compose \
+            --env-file .env.test \
+            -p bankapi-ci \
+            logs
+
+
+      # ---------------------------------------------------
+      # STEP 12
+      # Always destroy the temporary environment.
+      #
+      # This runs whether tests PASS or FAIL.
+      # ---------------------------------------------------
+      - name: Shut down CI environment
+        if: always()
+        run: |
+          docker compose \
+            --env-file .env.test \
+            -p bankapi-ci \
+            down -v
